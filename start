@@ -1,0 +1,59 @@
+#!/bin/bash
+
+DIR=""
+ISO=""
+
+# Parse input
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+    -iso) ISO="$2"; shift;;
+    *) DIR="$1";;
+  esac
+  shift
+done
+
+
+# Check if DIR is valid
+if [ -z "$DIR" ]; then
+  echo "Please specify a directory"
+  exit 1
+fi
+
+if [ ! -d "$DIR" ]; then
+  echo "The specified path is not a valid directory: $DIR"
+  exit 1
+fi
+
+if [ ! -f "$DIR/disk.qcow2" ]; then
+  echo "File disk.qcow2 doesn't exist in the specified path: $DIR"
+  exit 1
+fi
+
+if [ ! -f "$DIR/ovmf_vars.fd" ]; then
+  echo "File ovmf_vars.fd doesn't exist in the specified path: $DIR"
+  exit 1
+fi
+
+CMD="qemu-system-aarch64 \
+  -accel hvf \
+  -m 4096 \
+  -cpu host -M virt \
+  -drive file=/opt/homebrew/share/qemu/edk2-aarch64-code.fd,if=pflash,format=raw,readonly=on \
+  -drive file=${DIR}/ovmf_vars.fd,if=pflash,format=raw \
+  -drive if=none,file=${DIR}/disk.qcow2,format=qcow2,id=hd0 \
+  -device virtio-blk-device,drive=hd0,serial=\"dummyserial\" \
+  -device virtio-net-device,netdev=net0 \
+  -netdev user,id=net0,net=192.168.39.0/24,dhcpstart=192.168.39.10,restrict=y \
+  -vga none -device virtio-gpu-pci \
+  -device usb-ehci -device usb-kbd -device usb-mouse -usb"
+
+if [ -f "$ISO" ]; then
+  echo "Using installation media: $ISO"
+  CMD="$CMD -cdrom $ISO"
+fi
+
+CMD="$CMD -monitor stdio"
+
+echo "Starting VM"
+
+$CMD
