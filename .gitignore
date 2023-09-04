@@ -1,2 +1,3 @@
 */disk.qcow2
+*/ovmf_vars.fd
 images/*.iso

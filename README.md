@@ -13,5 +13,12 @@ Manage QEMU virtual machine instances for a local lab setup on Macbook with Appl
 
 # Start a VM
 ./start ubuntu01
+
+# Need privilege when using vmnet-shared network
+sudo ./start ubuntu01
 ```
+
+## Further on
+
+[UTM](https://github.com/utmapp/UTM) offers better experience with running and managing QEMU instances on macOS
 
